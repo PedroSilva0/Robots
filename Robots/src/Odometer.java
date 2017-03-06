@@ -1,8 +1,5 @@
 
 import static java.lang.Math.sqrt;
-import robocode.AdvancedRobot;
-import robocode.Condition;
-import robocode.CustomEvent;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -15,13 +12,15 @@ import robocode.CustomEvent;
  * @author Utilizador
  */
 
-public class Kilometer_Counter {
+public class Odometer {
     
     double init_x;
     double init_y;
     double total_dist;
+    
+    private static double all_round_distance;
 
-    Kilometer_Counter(double x, double y) {
+    Odometer(double x, double y) {
         init_x=x;
         init_y=y;
         total_dist=0;
@@ -36,13 +35,19 @@ public class Kilometer_Counter {
     public void moved(double x,double y){
         double y_var=y-init_y;
         double x_var=x-init_x;
-        total_dist += sqrt(y_var*y_var+x_var*x_var);
+        double mov_dist=sqrt(y_var*y_var+x_var*x_var);
+        total_dist += mov_dist;
+        all_round_distance+=mov_dist;
         init_x=x;
         init_y=y;
     }
     
     public double get_total_dist() {
         return total_dist;
+    }
+    
+    public double get_all_round_distance(){
+        return all_round_distance;
     }
     
     

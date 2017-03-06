@@ -15,7 +15,7 @@ public class Conta_Quilometros extends AdvancedRobot
 {
 	
         
-        Kilometer_Counter distance;
+        Odometer distance;
         
         public void run() {
             /*distance= new Kilometer_Counter();

@@ -5,13 +5,15 @@ import java.awt.Color;
 
 public class Pacifist extends AdvancedRobot {
 	
-        private Kilometer_Counter distance;
+        private Odometer odometer;
+        //private static double total_distance;
         //private int turn=0;
         /**
 	 * run: MyFirstRobot's default behavior
 	 */
 	public void run() {
-            distance = new Kilometer_Counter(getX(),getY());
+            //total_distance=0;
+            odometer = new Odometer(getX(),getY());
             //distance.starting_position(getX(),getY());
             addCustomEvent(new Condition("TurnStartedEvent", 99) {
                 @Override
@@ -73,8 +75,10 @@ public class Pacifist extends AdvancedRobot {
 	}	
         
         public void onRoundEnded(RoundEndedEvent e){
-            distance.moved(getX(),getY());
-            System.out.println("This round I moved "+ distance.get_total_dist() + " pixels!" );
+            odometer.moved(getX(),getY());
+            System.out.println("This round I moved "+ odometer.get_total_dist() + " pixels!" );
+            //total_distance+=odometer.get_total_dist();
+            //System.out.println("So far I moved "+ odometer.get_all_round_distance()+" pixels!");
         }
         
         @Override
@@ -82,10 +86,14 @@ public class Pacifist extends AdvancedRobot {
 
             if (e.getCondition().getName().equals("TurnStartedEvent")) { 
                 
-                distance.moved(getX(),getY());
+                odometer.moved(getX(),getY());
                 //System.out.println("This turn"+ turn +" I moved "+ distance.get_total_dist() + " pixels!" );
                 //turn++;
                 //execute();
             } 
+        }
+        
+        public void onBattleEnded(BattleEndedEvent e){
+            System.out.println("In this match I moved "+odometer.get_all_round_distance()+" pixels!");
         }
 }
