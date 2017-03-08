@@ -10,21 +10,21 @@
  */
 public class EnemyBot {
     
-    private double x;
-    private double y;
+    private int x;
+    private int y;
     private String name;
 
-    public EnemyBot(double x, double y,String name) {
+    public EnemyBot(int x, int y,String name) {
         this.x = x;
         this.y = y;
         this.name=name;
     }
 
-    public double getX() {
+    public int getX() {
         return x;
     }
 
-    public double getY() {
+    public int getY() {
         return y;
     }
     
@@ -36,7 +36,7 @@ public class EnemyBot {
 
    
 
-    public void next_obstacle(double enemyX, double enemyY, String name) {
+    public void next_obstacle(int enemyX, int enemyY, String name) {
         if(!name.equals(this.name)){
             x=enemyX;
             y=enemyY;
