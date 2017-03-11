@@ -17,6 +17,9 @@ public class Rock2 extends AdvancedRobot{
     
     public void run(){
         to_place(300,500);
+        while(true){
+            this.doNothing();
+        }
     }
     
     private void to_place(double x,double y){

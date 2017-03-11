@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import robocode.AdvancedRobot;
+import robocode.DeathEvent;
 import robocode.HitRobotEvent;
+import robocode.HitWallEvent;
+import robocode.RoundEndedEvent;
 import robocode.ScannedRobotEvent;
 import robocode.util.Utils;
 
@@ -18,6 +21,7 @@ public class Obstacle_course_runner extends AdvancedRobot {
     private ArrayList<EnemyBot> points_of_path;
     private double goal_x;
     private double goal_y;
+    private DistanceThread counter;
 
     public void run() {
 
@@ -30,6 +34,8 @@ public class Obstacle_course_runner extends AdvancedRobot {
         points_of_path= new ArrayList<>();
         //Ir  para posição inicial
         to_place(goal_x, goal_y);
+        this.counter = new DistanceThread(this);
+        this.counter.start();
         skip(50);
         //main_turn_action();
         turnRadarRight(360);
@@ -37,11 +43,11 @@ public class Obstacle_course_runner extends AdvancedRobot {
             calc_path();
             for (EnemyBot o : obstacles.values()) {
             //to_place(o.getX(), o.getY());
-            System.out.println("X: "+o.getX()+" Y: "+o.getY());
+            //System.out.println("X: "+o.getX()+" Y: "+o.getY());
         }
             for (EnemyBot o : points_of_path) {
             //to_place(o.getX(), o.getY());
-            //System.out.println("X: "+o.getX()+" Y: "+o.getY());
+            System.out.println("X: "+o.getX()+" Y: "+o.getY());
         }
             run_course();
             main_turn_action();
@@ -62,6 +68,7 @@ public class Obstacle_course_runner extends AdvancedRobot {
             //System.out.println("X: "+o.getX()+" Y: "+o.getY());
         }
             run_course();*/
+            //doNothing();
             turnRight(360);
 
         }
@@ -148,6 +155,11 @@ public class Obstacle_course_runner extends AdvancedRobot {
     }
 
     public void onHitRobot(HitRobotEvent e) {
+        if (e.getBearing() > -90 && e.getBearing() <= 90) {
+           back(100);
+       } else {
+           ahead(100);
+       }
         System.out.println("Bati");
     }
 
@@ -208,5 +220,21 @@ public class Obstacle_course_runner extends AdvancedRobot {
         }
         
     }
+    
+    
+    
+    public void onRoundEnded(RoundEndedEvent event) {
+       //double distance = counter.getDistance();
+       //System.out.println("Distance: " + distance + " pixels");
+       //counter.kill();
+   }
+    
+    public void onDeath(DeathEvent event){
+       double distance = counter.getDistance();
+       System.out.println("Distance: " + distance + " pixels");
+       counter.kill();
+    }
+    
+    
 
 }
