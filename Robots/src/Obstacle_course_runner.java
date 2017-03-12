@@ -1,8 +1,10 @@
 
+import java.awt.Color;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Random;
 import robocode.AdvancedRobot;
 import robocode.DeathEvent;
 import robocode.HitRobotEvent;
@@ -22,10 +24,12 @@ public class Obstacle_course_runner extends AdvancedRobot {
     private double goal_x;
     private double goal_y;
     private DistanceThread counter;
+    private Random r;
 
     public void run() {
 
         //setup
+        r= new Random();
         goal_x=20;
         goal_y=20;
         setAdjustRadarForRobotTurn(true);
@@ -38,16 +42,23 @@ public class Obstacle_course_runner extends AdvancedRobot {
         this.counter.start();
         skip(100);
         turnRadarRight(360);
+        /*for(EnemyBot e:obstacles.values()){
+            System.out.println(e.getX()+"    " + e.getY());
+        }*/
             obstacles.put("Goal", new EnemyBot((int) goal_x, (int) goal_y, "Goal"));
             calc_path();
-            run_course();
+            //run_course();
             main_turn_action();
     }
 
     private void main_turn_action() {
         while (true) {
             //Do stuff here
+            //Random r= new Random();
             turnRight(360);
+            setBodyColor(new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256)));
+            setGunColor(new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256)));
+            setRadarColor(new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256)));
         }
     }
 
@@ -74,12 +85,28 @@ public class Obstacle_course_runner extends AdvancedRobot {
         boolean in_place = false;
         while (!in_place) {
             goTo(x, y);
+            execute();
+            
+            
+            if (getX() ==x && getY() == y) {
+                in_place = true;
+                stop();
+            }
+        }
+    }
+    
+    private void to_place2(double x, double y) {
+        boolean in_place = false;
+        while (!in_place) {
+            goTo(x, y);
             //stop();
             execute();
-            if (getX() == x && getY() == y) {
+            
+            if (Math.abs(x-getX()) < 0.001 && Math.abs(y-getY()) <0.001) {
                 in_place = true;
-                
+                stop();
             }
+            
         }
     }
 
@@ -112,17 +139,9 @@ public class Obstacle_course_runner extends AdvancedRobot {
     }
 
     private void run_course() {
-        //System.out.println(obstacles.size());
         for (EnemyBot o : points_of_path) {
             to_place(o.getX(), o.getY());
-            //stop();
-            //execute();
-            //System.out.println(o.getX());
         }
-
-        //obstacle.next_obstacle();
-        /*turnRight(90-getHeading());
-            ahead(100);*/
     }
 
     public void onHitRobot(HitRobotEvent e) {
@@ -143,42 +162,53 @@ public class Obstacle_course_runner extends AdvancedRobot {
     private void calc_path() {
         ArrayList<EnemyBot> aux= new ArrayList<>(obstacles.values());
         aux.sort(new ClockWiseComparator((int) goal_x, (int) goal_y));
+        for(EnemyBot e:aux){
+            System.out.println(e.getX()+"    " + e.getY());
+        }
         for(int i=0;i<obstacles.size()-1;i++){
-            //System.out.println("");
             EnemyBot next=aux.get(i);
             EnemyBot after_next=aux.get(i+1);
             int diag=calc_which_diagonal(next,after_next);
             System.out.println(diag);
             switch(diag){
                 case 1:
-                    //to_place(next.getX() - 38, next.getY() + 38);
-                    //to_place(next.getX() + 38, next.getY() + 38);
-                    points_of_path.add(new EnemyBot(next.getX() - 38, next.getY() + 38,"Point"));
-                    points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() + 38,"Point"));
+                    to_place2(next.getX() - 37, next.getY() + 37);
+                    to_place2(next.getX() + 37, next.getY() + 37);
+                    //points_of_path.add(new EnemyBot(next.getX() - 38, next.getY() + 38,"Point"));
+                    //points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() + 38,"Point"));
                     break;
                 case 2:
-                    //to_place(next.getX() - 38, next.getY() + 38);
-                    points_of_path.add(new EnemyBot(next.getX() - 38, next.getY() + 38,"Point"));
+                    to_place2(next.getX() - 37, next.getY() + 37);
+                    //points_of_path.add(new EnemyBot(next.getX() - 38, next.getY() + 38,"Point"));
                     break;
                 case 3:
-                    //to_place(next.getX() + 38, next.getY() - 38);
-                    //to_place(next.getX() - 38, next.getY() - 38);
-                    points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() - 38,"Point"));
-                    points_of_path.add(new EnemyBot(next.getX() - 38, next.getY() - 38,"Point"));
+                    //to_place(next.getX()+38,next.getY()+38);
+                    to_place2(next.getX() + 37, next.getY() - 37);
+                    to_place2(next.getX() - 37, next.getY() - 37);
+                    //points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() + 38,"Point"));
+                    //points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() - 38,"Point"));
+                    //points_of_path.add(new EnemyBot(next.getX() - 38, next.getY() - 38,"Point"));
                     break;
                 case 4:
-                    //to_place(next.getX() + 38, next.getY() - 38);
-                    points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() - 38,"Point"));
+                    if(getY()-37 < next.getY()){
+                        System.out.println("entrei aqui");
+                        to_place2(next.getX()-37,next.getY()+37);
+                    }
+                    to_place2(next.getX()+37,next.getY()+ 37);
+                    //stop();
+                    to_place2(next.getX() + 37, next.getY() - 37);
+                    //points_of_path.add(new EnemyBot(next.getX() + 38, next.getY() - 38,"Point"));
                     break;
             }
         }
-        points_of_path.add(new EnemyBot((int)goal_x, (int) goal_y,"Point"));
+        to_place(goal_x,goal_y);
+        //points_of_path.add(new EnemyBot((int)goal_x, (int) goal_y,"Point"));
     }
 
     //Returns the diagonal to wich you need to go. Diagonals are numbered acording to the quadrant they belong
     private int calc_which_diagonal(EnemyBot next, EnemyBot after_next) {
         
-        if(after_next.getX()<next.getX()&& after_next.getY()<= next.getY()){
+        if(after_next.getX()<next.getX()&& after_next.getY()>= next.getY()){
             return 3;
         }
         if(after_next.getX()<next.getX()){
