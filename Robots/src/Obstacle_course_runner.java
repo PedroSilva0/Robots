@@ -36,19 +36,10 @@ public class Obstacle_course_runner extends AdvancedRobot {
         to_place(goal_x, goal_y);
         this.counter = new DistanceThread(this);
         this.counter.start();
-        skip(50);
-        //main_turn_action();
+        skip(100);
         turnRadarRight(360);
             obstacles.put("Goal", new EnemyBot((int) goal_x, (int) goal_y, "Goal"));
             calc_path();
-            for (EnemyBot o : obstacles.values()) {
-            //to_place(o.getX(), o.getY());
-            //System.out.println("X: "+o.getX()+" Y: "+o.getY());
-        }
-            for (EnemyBot o : points_of_path) {
-            //to_place(o.getX(), o.getY());
-            System.out.println("X: "+o.getX()+" Y: "+o.getY());
-        }
             run_course();
             main_turn_action();
     }
@@ -56,34 +47,11 @@ public class Obstacle_course_runner extends AdvancedRobot {
     private void main_turn_action() {
         while (true) {
             //Do stuff here
-            /*turnRadarRight(360);
-            obstacles.put("Goal", new EnemyBot((int) goal_x, (int) goal_y, "Goal"));
-            calc_path();
-            for (EnemyBot o : obstacles.values()) {
-            //to_place(o.getX(), o.getY());
-            System.out.println("X: "+o.getX()+" Y: "+o.getY());
-        }
-            for (EnemyBot o : points_of_path) {
-            //to_place(o.getX(), o.getY());
-            //System.out.println("X: "+o.getX()+" Y: "+o.getY());
-        }
-            run_course();*/
-            //doNothing();
             turnRight(360);
-
         }
     }
 
-    /*public void doMove() {
-
-	// switch directions if we've stopped
-	if (getVelocity() == 0)
-		moveDirection *= -1;
-
-	// circle our enemy
-	setTurnRight(enemy.getBearing() + 90);
-	setAhead(1000 * moveDirection);
-}*/
+   
     public void onScannedRobot(ScannedRobotEvent e) {
 
         if (e.getVelocity() == 0) {
@@ -106,10 +74,11 @@ public class Obstacle_course_runner extends AdvancedRobot {
         boolean in_place = false;
         while (!in_place) {
             goTo(x, y);
+            stop();
             execute();
-            //System.out.println("X: " + getX()+ "         Y :"+ getY());
             if (getX() == x && getY() == y) {
                 in_place = true;
+                
             }
         }
     }
