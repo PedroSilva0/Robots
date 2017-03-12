@@ -74,7 +74,7 @@ public class Obstacle_course_runner extends AdvancedRobot {
         boolean in_place = false;
         while (!in_place) {
             goTo(x, y);
-            stop();
+            //stop();
             execute();
             if (getX() == x && getY() == y) {
                 in_place = true;
@@ -115,6 +115,8 @@ public class Obstacle_course_runner extends AdvancedRobot {
         //System.out.println(obstacles.size());
         for (EnemyBot o : points_of_path) {
             to_place(o.getX(), o.getY());
+            //stop();
+            //execute();
             //System.out.println(o.getX());
         }
 
