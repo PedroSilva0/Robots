@@ -8,13 +8,13 @@
  *
  * @author Utilizador
  */
-public class EnemyBot {
+public class EnemyBot3 {
     
     private int x;
     private int y;
     private String name;
 
-    public EnemyBot(int x, int y,String name) {
+    public EnemyBot3(int x, int y,String name) {
         this.x = x;
         this.y = y;
         this.name=name;

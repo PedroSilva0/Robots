@@ -303,3 +303,4 @@ $RECYCLE.BIN/
 *.lnk
 *.xml
 *.properties
+/Robots/dist/
