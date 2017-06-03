@@ -7,6 +7,11 @@ package team;
 import robocode.*;
 import java.awt.geom.Point2D;
 import java.awt.Color;
+import java.awt.geom.Line2D;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 
@@ -19,36 +24,26 @@ public class Shooter extends TeamRobot implements Droid{
 
 
 	private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
+        private HashMap<String,Mate> team = new HashMap<>();
 	private byte radarDirection = 1;
 	private byte moveDirection = 1;
 
 	public void run() {
+            Mate myself= new Mate(getName(),getX(),getY());
+            try {
+            broadcastMessage(myself);
+        } catch (IOException ex) {
+            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+        }
             System.out.println(getName());
 		setColors(Color.white, Color.black, Color.magenta);
 		setAdjustRadarForGunTurn(true);
 		setAdjustGunForRobotTurn(true);
 
-		/*while (true) {
-                    System.out.println("print");
-			//doRadar();
-			//doMove();
-			//doGun();
-			//execute();
-		}*/
+		
 	}
 
-	/*public void onScannedRobot(ScannedRobotEvent e) {
-
-		// track if we have no enemy, the one we found is significantly
-		// closer, or we scanned the one we've been tracking.
-                if(!isTeammate(e.getName()))
-		if ( enemy.none() || e.getDistance() < enemy.getDistance() - 70 ||
-				e.getName().equals(enemy.getName())) {
-
-			// track him using the NEW update method
-			enemy.update(e, this);
-		}
-	}*/
+	
 
 	public void onRobotDeath(RobotDeathEvent e) {
 		// see if the robot we were tracking died
@@ -57,18 +52,18 @@ public class Shooter extends TeamRobot implements Droid{
 		}
 	}   
 
-	/*void doRadar() {
-		if (enemy.none()) {
-			// look around if we have no enemy
-			setTurnRadarRight(360);
-		} else {
-			// oscillate the radar
-			double turn = getHeading() - getRadarHeading() + enemy.getBearing();
-			turn += 30 * radarDirection;
-			setTurnRadarRight(normalizeBearing(turn));
-			radarDirection *= -1;
-		}
-	}*/
+    @Override
+    public void onDeath(DeathEvent event) {
+        try {
+            broadcastMessage("DIED");
+        } catch (IOException ex) {
+            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+        
+        
+
+	
 
 	public void doMove() {
 
@@ -129,9 +124,8 @@ public class Shooter extends TeamRobot implements Droid{
 	}
         
         public void onMessageReceived(MessageEvent e) {
-		if (e.getMessage() instanceof Point2D.Double) {
-                        System.out.println("recebi mensagem");
-			Point2D.Double p = (Point2D.Double) e.getMessage();
+		if (e.getMessage() instanceof Point3D) {
+			Point3D p = (Point3D) e.getMessage();
 			// Calculate x and y to target
 			double dx = p.getX() - this.getX();
 			double dy = p.getY() - this.getY();
@@ -140,9 +134,48 @@ public class Shooter extends TeamRobot implements Droid{
 
 			// Turn gun to target
 			turnGunRight(normalRelativeAngleDegrees(theta - getGunHeading()));
+                        //System.out.println(!in_line_of_fire(p.getX(),p.getY(), p.getZ()));
+                        if(!in_line_of_fire(p.getX(), p.getY(),p.getZ())){
 			// Fire hard!
-			fire(3);
+			fire(1.5);
+                        }
 		}
+                if (e.getMessage() instanceof Mate) {
+                        Mate mate=  (Mate)e.getMessage();
+			team.put(mate.getName(), mate);
+		}
+                if (e.getMessage() instanceof String) {
+                        team.remove(e.getSender());
+		}
+	}
+        
+        
+        
+       public boolean in_line_of_fire(double x, double y,double when){
+        for(Mate m:team.values()){
+            if(Line2D.linesIntersect(m.getX()-40,m.getY()-40,m.getX()+40,m.getY()+40,getFutureX(when),getFutureY(when),x,y)){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public double getFutureX(double when) {
+		/*
+		double sin = Math.sin(Math.toRadians(getHeading()));
+		double futureX = x + sin * getVelocity() * when;
+		return futureX;
+		*/
+		return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
+	}
+
+	public double getFutureY(double when) {
+		/*
+		double cos = Math.cos(Math.toRadians(getHeading()));
+		double futureY = y + cos * getVelocity() * when;
+		return futureY;
+		*/
+		return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
 	}
 }
 

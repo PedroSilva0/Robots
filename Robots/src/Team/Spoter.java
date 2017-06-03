@@ -4,13 +4,17 @@ import robocode.*;
 import java.awt.geom.Point2D;
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.geom.Line2D;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 public class Spoter extends TeamRobot {
 
     private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
+    private HashMap<String,Mate> team = new HashMap<>();
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
@@ -20,42 +24,44 @@ public class Spoter extends TeamRobot {
         setColors(Color.white, Color.black, Color.magenta);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-
+        Mate myself= new Mate(getName(),getX(),getY());
+        try {
+            broadcastMessage(myself);
+        } catch (IOException ex) {
+            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+        }
         while (true) {
+            myself= new Mate(getName(),getX(),getY());
+            try {
+            broadcastMessage(myself);
+        } catch (IOException ex) {
+            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+        }
             doRadar();
             doMove();
             doGun();
             execute();
         }
     }
+    
+    public void onDeath(DeathEvent event) {
+        try {
+            broadcastMessage("DIED");
+        } catch (IOException ex) {
+            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     public void onScannedRobot(ScannedRobotEvent e) {
 
-        // track if we have no enemy, the one we found is significantly
-        // closer, or we scanned the one we've been tracking.
+        
         if (!isTeammate(e.getName())) {
             if (enemy.none() || e.getDistance() < enemy.getDistance() - 70
                     || e.getName().equals(enemy.getName())) {
 
-                // track him using the NEW update method
+                
                 enemy.update(e, this);
-                /*try {
-                    double absBearingDeg = (this.getHeading() + e.getBearing());
-                    if (absBearingDeg < 0) {
-                        absBearingDeg += 360;
-                    }
-
-                    // yes, you use the _sine_ to get the X value because 0 deg is North
-                    double x = this.getX() + Math.sin(Math.toRadians(absBearingDeg)) * e.getDistance();
-
-                    // likewise, you use the _cosine_ to get the Y value for the same reason
-                    double y = this.getY() + Math.cos(Math.toRadians(absBearingDeg)) * e.getDistance();
-                    Point2D.Double localization= new Point2D.Double(x, y);
-                    sendMessage("team.Shooter* (" + myNumber + ")", localization);
-                } catch (IOException ex) {
-                    System.out.println("nao mandei");
-                    Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
-                }*/
+                
             }
         }
     }
@@ -105,14 +111,19 @@ public class Spoter extends TeamRobot {
         double futureY = enemy.getFutureY(time);
         double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
         setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
-        Point2D.Double spot=new Point2D.Double(futureX,futureY);
+        Point3D spot=new Point3D(futureX,futureY,time);
+        
         try {
             sendMessage("team.Shooter* (" + myNumber + ")", spot);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        //System.out.println(!in_line_of_fire(futureX,futureY));
+        if(!in_line_of_fire(futureX,futureY,time)){
         if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
             setFire(firePower);
+        }
         }
     }
 
@@ -157,4 +168,42 @@ public class Spoter extends TeamRobot {
         }
         return Integer.parseInt(n);
     }
+    
+    public void onMessageReceived(MessageEvent e) {
+                if (e.getMessage() instanceof Mate) {
+                        Mate mate=  (Mate)e.getMessage();
+			team.put(mate.getName(), mate);
+		}
+                if (e.getMessage() instanceof String) {
+                        team.remove(e.getSender());
+		}
+	}
+    
+    public boolean in_line_of_fire(double x, double y,long when){
+        for(Mate m:team.values()){
+            if(Line2D.linesIntersect(m.getX()-40,m.getY()-40,m.getX()+40,m.getY()+40,getFutureX(when),getFutureY(when),x,y)){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public double getFutureX(long when) {
+		/*
+		double sin = Math.sin(Math.toRadians(getHeading()));
+		double futureX = x + sin * getVelocity() * when;
+		return futureX;
+		*/
+		return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
+	}
+
+	public double getFutureY(long when) {
+		/*
+		double cos = Math.cos(Math.toRadians(getHeading()));
+		double futureY = y + cos * getVelocity() * when;
+		return futureY;
+		*/
+		return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
+	}
+    
 }
