@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package team;
+
 import robocode.*;
 import java.awt.geom.Point2D;
 import java.awt.Color;
@@ -15,135 +16,127 @@ import java.util.logging.Logger;
 import robocode.util.Utils;
 import static robocode.util.Utils.normalRelativeAngleDegrees;
 
-
 /**
  *
  * @author Utilizador
  */
-public class Bodyguard extends TeamRobot implements Droid{
-    
+public class Bodyguard extends TeamRobot implements Droid {
 
+    private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
+    private byte radarDirection = 1;
+    private byte moveDirection = 1;
+    private int myNumber;
+    private int turn = 0;
 
-	private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
-	private byte radarDirection = 1;
-	private byte moveDirection = 1;
-        private int myNumber;
-        private int turn=0;
-        
-        
+    public void run() {
+        myNumber = getBotNumber(this.getName());
+        System.out.println(getName());
+        setColors(Color.white, Color.black, Color.magenta);
+        setAdjustRadarForGunTurn(true);
+        setAdjustGunForRobotTurn(true);
 
-	public void run() {
-            myNumber = getBotNumber(this.getName());
-            System.out.println(getName());
-		setColors(Color.white, Color.black, Color.magenta);
-		setAdjustRadarForGunTurn(true);
-		setAdjustGunForRobotTurn(true);
+    }
 
-		
-	}
+    public void onRobotDeath(RobotDeathEvent e) {
+        // see if the robot we were tracking died
+        if (e.getName().equals(enemy.getName())) {
+            enemy.reset();
+        }
+    }
 
-	
+    void doGun() {
 
-	public void onRobotDeath(RobotDeathEvent e) {
-		// see if the robot we were tracking died
-		if (e.getName().equals(enemy.getName())) {
-			enemy.reset();
-		}
-	}   
+        if (enemy.none()) {
+            return;
+        }
 
-	
+        double firePower = Math.min(400 / enemy.getDistance(), 3);
+        double bulletSpeed = 20 - firePower * 3;
+        long time = (long) (enemy.getDistance() / bulletSpeed);
+        double futureX = enemy.getFutureX(time);
+        double futureY = enemy.getFutureY(time);
+        double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
+        setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
 
-	
-	void doGun() {
+        if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
+            setFire(firePower);
+        }
+    }
 
-		if (enemy.none())
-			return;
+    // computes the absolute bearing between two points
+    double absoluteBearing(double x1, double y1, double x2, double y2) {
+        double xo = x2 - x1;
+        double yo = y2 - y1;
+        double hyp = Point2D.distance(x1, y1, x2, y2);
+        double arcSin = Math.toDegrees(Math.asin(xo / hyp));
+        double bearing = 0;
 
-		double firePower = Math.min(400 / enemy.getDistance(), 3);
-		double bulletSpeed = 20 - firePower * 3;
-		long time = (long)(enemy.getDistance() / bulletSpeed);
-		double futureX = enemy.getFutureX(time);
-		double futureY = enemy.getFutureY(time);
-		double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
-		setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
+        if (xo > 0 && yo > 0) { // both pos: lower-Left
+            bearing = arcSin;
+        } else if (xo < 0 && yo > 0) { // x neg, y pos: lower-right
+            bearing = 360 + arcSin; // arcsin is negative here, actually 360 - ang
+        } else if (xo > 0 && yo < 0) { // x pos, y neg: upper-left
+            bearing = 180 - arcSin;
+        } else if (xo < 0 && yo < 0) { // both neg: upper-right
+            bearing = 180 - arcSin; // arcsin is negative here, actually 180 + ang
+        }
 
-		if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
-			setFire(firePower);
-		}
-	}
+        return bearing;
+    }
 
-	// computes the absolute bearing between two points
-	double absoluteBearing(double x1, double y1, double x2, double y2) {
-		double xo = x2-x1;
-		double yo = y2-y1;
-		double hyp = Point2D.distance(x1, y1, x2, y2);
-		double arcSin = Math.toDegrees(Math.asin(xo / hyp));
-		double bearing = 0;
+    // normalizes a bearing to between +180 and -180
+    double normalizeBearing(double angle) {
+        while (angle > 180) {
+            angle -= 360;
+        }
+        while (angle < -180) {
+            angle += 360;
+        }
+        return angle;
+    }
 
-		if (xo > 0 && yo > 0) { // both pos: lower-Left
-			bearing = arcSin;
-		} else if (xo < 0 && yo > 0) { // x neg, y pos: lower-right
-			bearing = 360 + arcSin; // arcsin is negative here, actually 360 - ang
-		} else if (xo > 0 && yo < 0) { // x pos, y neg: upper-left
-			bearing = 180 - arcSin;
-		} else if (xo < 0 && yo < 0) { // both neg: upper-right
-			bearing = 180 - arcSin; // arcsin is negative here, actually 180 + ang
-		}
+    public void onMessageReceived(MessageEvent e) {
+        if (e.getMessage() instanceof Point2D.Double) {
+            stop();
+            System.out.println("recebi mensagem");
+            Point2D.Double p = (Point2D.Double) e.getMessage();
+            // Calculate x and y to target
+            double dx = p.getX() - this.getX();
+            double dy = p.getY() - this.getY();
+            System.out.println(line_of_fire(dx, dy));
+            if (line_of_fire(dx, dy)) {
 
-		return bearing;
-	}
+                // Calculate angle to target
+                double theta = Math.toDegrees(Math.atan2(dx, dy));
 
-	// normalizes a bearing to between +180 and -180
-	double normalizeBearing(double angle) {
-		while (angle >  180) angle -= 360;
-		while (angle < -180) angle += 360;
-		return angle;
-	}
-        
-        public void onMessageReceived(MessageEvent e) {
-		if (e.getMessage() instanceof Point2D.Double) {
-                        //System.out.println("recebi mensagem");
-			Point2D.Double p = (Point2D.Double) e.getMessage();
-			// Calculate x and y to target
-			double dx = p.getX() - this.getX();
-			double dy = p.getY() - this.getY();
-			// Calculate angle to target
-			double theta = Math.toDegrees(Math.atan2(dx, dy));
+                // Turn gun to target
+                turnGunRight(normalRelativeAngleDegrees(theta - getGunHeading()));
+                // Fire hard!
+                fire(1.5);
+            }
 
-			// Turn gun to target
-			turnGunRight(normalRelativeAngleDegrees(theta - getGunHeading()));
-			// Fire hard!
-			fire(3);
-		}
-                if(e.getMessage() instanceof Point2D.Float){
-                    Point2D.Float p = (Point2D.Float) e.getMessage();
-                    go_to_start_position(p.getX(),p.getY());
-                    adjustHeading(90);
-                    try{
-                        sendMessage("team.Vip*", "READY");
-                    } catch (IOException ex) {
-                        Logger.getLogger(Bodyguard.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                if(e.getMessage() instanceof Point){
-                    //x é o turn_right e y e o value
-                    Point p= (Point) e.getMessage();
-                    doMove(p.getX(),p.getY());
-                    execute();
-                    /*try{
-                        sendMessage("team.Vip*", "READY");
-                    } catch (IOException ex) {
-                        Logger.getLogger(Bodyguard.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
-                }
-                
-                if(e.getMessage() instanceof String){
-                    turn_arround();
-                }
-	}
-        
-    
-        private void to_place(double x, double y) {
+        }
+        if (e.getMessage() instanceof Point2D.Float) {
+            Point2D.Float p = (Point2D.Float) e.getMessage();
+            go_to_start_position(p.getX(), p.getY());
+            adjustHeading(90);
+            try {
+                sendMessage("team.Vip*", "READY");
+            } catch (IOException ex) {
+                Logger.getLogger(Bodyguard.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (e.getMessage() instanceof Point) {
+            Point p = (Point) e.getMessage();
+            doMove(p.getX(), p.getY());
+            execute();
+        }
+        if (e.getMessage() instanceof String) {
+            turn_arround();
+        }
+    }
+
+    private void to_place(double x, double y) {
         boolean in_place = false;
         while (!in_place) {
             goTo(x, y);
@@ -155,17 +148,16 @@ public class Bodyguard extends TeamRobot implements Droid{
             }
         }
     }
-        
-        private void turn_arround() {
+
+    private void turn_arround() {
         //update state
         stop();
         turnRight(180);
         ahead(200);
-        
+
     }
-    
-    
-        private void goTo(double x, double y) {
+
+    private void goTo(double x, double y) {
         /* Transform our coordinates into a vector */
         x -= getX();
         y -= getY();
@@ -195,7 +187,7 @@ public class Bodyguard extends TeamRobot implements Droid{
             //back(distance);
         }
     }
-        
+
     static public int getBotNumber(String name) {
         String n = "0";
         int low = name.indexOf("(") + 1;
@@ -207,31 +199,44 @@ public class Bodyguard extends TeamRobot implements Droid{
     }
 
     private void go_to_start_position(double x, double y) {
-        to_place(x+70,y);
-        /*switch(myNumber){
+
+        switch (myNumber) {
             case 1:
-                to_place(x+25,y);
-        }*/
+                to_place(getBattleFieldWidth()-50,y);
+                to_place(x + 70, y);
+                break;
+            case 2:
+                to_place(x,getBattleFieldHeight()-50);
+                to_place(x, y + 70);
+                break;
+            case 3:
+                to_place(50,y);
+                to_place(x - 70, y);
+                break;
+            case 4:
+                to_place(x,50);
+                to_place(x, y - 70);
+                break;
+        }
     }
-    
-    public void doMove(double right,double value) {
-        
-        if(turn==1){
-            if(right==1){
+
+    public void doMove(double right, double value) {
+
+        if (turn == 1) {
+            if (right == 1) {
                 turnRight(value);
-                turn=0;
-            }else{
+                turn = 0;
+            } else {
                 turnRight(-value);
-                turn=0;
+                turn = 0;
             }
-        }else{
-            turn=1;
+        } else {
+            turn = 1;
             ahead(value);
         }
-        
-        
+
     }
-    
+
     private void adjustHeading(int new_heading) {
         boolean my_head = false;
         while (!my_head) {
@@ -246,7 +251,32 @@ public class Bodyguard extends TeamRobot implements Droid{
             }
         }
     }
+
+    private boolean line_of_fire(double x, double y) {
+        switch (myNumber) {
+            case 1:
+                if (x > 30) {
+                    return true;
+                }
+                break;
+            case 2:
+                if (y > 30) {
+                    return true;
+                }
+                break;
+            case 3:
+                if (x < -30) {
+                    return true;
+                }
+                break;
+            case 4:
+                if (y < -30) {
+                    return true;
+                }
+
+                break;
+        }
+
+        return false;
+    }
 }
-
-    
-

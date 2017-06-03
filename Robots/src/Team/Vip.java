@@ -23,11 +23,11 @@ public class Vip extends TeamRobot {
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
-    private int start_x=200;
-    private int start_y=200;
+    private int start_x=500;
+    private int start_y=500;
     private int state;
     private int tooCloseToWall = 0;
-    private int wallMargin = 100;
+    private int wallMargin = 300;
     private int turn=0;
     private int ready=0;
 
@@ -38,6 +38,9 @@ public class Vip extends TeamRobot {
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
         state=0;  //iniciar a um para testes
+        
+        to_place(start_x, start_y);
+        
         Point2D.Float start_spot=new Point2D.Float(start_x,start_y);
         try {
             broadcastMessage(start_spot);
@@ -45,12 +48,7 @@ public class Vip extends TeamRobot {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        to_place(start_x, start_y);
-
-        
-        
         while (true) {
-            System.out.println(state);
             switch(state){
                 case 0:
                     adjustHeading(90);
@@ -64,6 +62,7 @@ public class Vip extends TeamRobot {
                 case 2:
                     doRadar();
                     doMove();
+                    doGun();
                     execute();
                     break;
                 case 3:
@@ -72,6 +71,11 @@ public class Vip extends TeamRobot {
                     execute();
                     //state=2;
                     tooCloseToWall();
+                case 4:
+                    doRadar();
+                    doGun();
+                    execute();
+                    //state=2;
                     break;
             }
            
@@ -82,32 +86,13 @@ public class Vip extends TeamRobot {
 
 
     public void onScannedRobot(ScannedRobotEvent e) {
-
-        // track if we have no enemy, the one we found is significantly
-        // closer, or we scanned the one we've been tracking.
         if (!isTeammate(e.getName())) {
             if (enemy.none() || e.getDistance() < enemy.getDistance() - 70
                     || e.getName().equals(enemy.getName())) {
-
                 // track him using the NEW update method
+                stop();
+                state=4;
                 enemy.update(e, this);
-                /*try {
-                    double absBearingDeg = (this.getHeading() + e.getBearing());
-                    if (absBearingDeg < 0) {
-                        absBearingDeg += 360;
-                    }
-
-                    // yes, you use the _sine_ to get the X value because 0 deg is North
-                    double x = this.getX() + Math.sin(Math.toRadians(absBearingDeg)) * e.getDistance();
-
-                    // likewise, you use the _cosine_ to get the Y value for the same reason
-                    double y = this.getY() + Math.cos(Math.toRadians(absBearingDeg)) * e.getDistance();
-                    Point2D.Double localization= new Point2D.Double(x, y);
-                    sendMessage("team.Shooter* (" + myNumber + ")", localization);
-                } catch (IOException ex) {
-                    System.out.println("nao mandei");
-                    Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
-                }*/
             }
         }
     }
@@ -115,6 +100,7 @@ public class Vip extends TeamRobot {
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
         if (e.getName().equals(enemy.getName())) {
+            state=2;
             enemy.reset();
         }
     }
@@ -177,13 +163,12 @@ public class Vip extends TeamRobot {
         setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
         Point2D.Double spot=new Point2D.Double(futureX,futureY);
         try {
-            sendMessage("team.Shooter* (" + myNumber + ")", spot);
+            broadcastMessage(spot);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
-            setFire(firePower);
-        }
+        //setFire(1.5);
+        
     }
 
     // computes the absolute bearing between two points
@@ -271,9 +256,24 @@ public class Vip extends TeamRobot {
             //back(distance);
         }
     }
+
+    @Override
+    public void onHitRobot(HitRobotEvent event) {
+        back(100);
+        adjustHeading(90);
+        back(100);
+        int i=ThreadLocalRandom.current().nextInt(0, 200);
+        for(;i>0;i--){
+            doNothing();
+        }
+        
+    }
     
     
-     private void adjustHeading(int new_heading) {
+    
+    
+    
+    private void adjustHeading(int new_heading) {
         boolean my_head = false;
         while (!my_head) {
             if (getHeading() > new_heading) {
