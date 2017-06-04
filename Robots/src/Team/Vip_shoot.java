@@ -10,6 +10,7 @@ import java.awt.geom.Point2D;
 import java.awt.Color;
 import java.awt.Point;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import robocode.util.Utils;
@@ -17,7 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Vip_shoot extends TeamRobot {
 
-    private team.AdvancedEnemyBot enemy = new team.AdvancedEnemyBot();
+    //private team.AdvancedEnemyBot enemy = new team.AdvancedEnemyBot();
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
@@ -26,38 +27,39 @@ public class Vip_shoot extends TeamRobot {
     private int state;
     private int tooCloseToWall = 0;
     private int wallMargin = 300;
-    private int turn=0;
-    private int ready=0;
-    private PAD_Space emotions= new PAD_Space();
+    private int turn = 0;
+    private int ready = 0;
+    private PAD_Space emotions = new PAD_Space();
+    private HashMap<String, AdvancedEnemyBot> enemy_list = new HashMap<>();
 
     public void run() {
-        start_x=(float) getBattleFieldWidth()/2;
-        start_y=(float) getBattleFieldHeight()/2;
-       
+        start_x = (float) getBattleFieldWidth() / 2;
+        start_y = (float) getBattleFieldHeight() / 2;
+
         myNumber = getBotNumber(this.getName());
         setColors(Color.white, Color.black, Color.magenta);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-        state=0;  //iniciar a um para testes
-        
+        state = 0;  //iniciar a um para testes
+
         to_place(start_x, start_y);
-        
-        Point2D.Float start_spot=new Point2D.Float(start_x,start_y);
+
+        Point2D.Float start_spot = new Point2D.Float(start_x, start_y);
         try {
             broadcastMessage(start_spot);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         while (true) {
-            switch(state){
+            switch (state) {
                 case 0:
                     adjustHeading(90);
                     break;
                 case 1:
                     doNothing();
-                    if(ready==this.getTeammates().length){
-                        state=2;
+                    if (ready == this.getTeammates().length) {
+                        state = 2;
                     }
                     break;
                 case 2:
@@ -78,41 +80,51 @@ public class Vip_shoot extends TeamRobot {
                     //state=2;
                     break;
             }
-           
+
         }
     }
-    
-    
-
 
     public void onScannedRobot(ScannedRobotEvent e) {
         if (!isTeammate(e.getName())) {
-            if (enemy.none() || e.getDistance() < enemy.getDistance() - 70
+            if (enemy_list.containsKey(e.getName())) {
+                state = 4;
+                AdvancedEnemyBot enemy_aux = enemy_list.get(e.getName());
+                enemy_aux.update(e, this);
+                enemy_list.put(e.getName(), enemy_aux);
+            } else {
+                state = 4;
+                AdvancedEnemyBot enemy_aux = new AdvancedEnemyBot();
+                enemy_aux.update(e, this);
+                enemy_list.put(e.getName(), enemy_aux);
+
+            }
+            /*if (enemy.none() || e.getDistance() < enemy.getDistance() - 70
                     || e.getName().equals(enemy.getName())) {
                 // track him using the NEW update method
                 state=4;
                 enemy.update(e, this);
             }else{
+                state=4;
                 emotions.updateArousal(100);
                 emotions.updateDominance(100);
                 emotions.updatePleasure(100);
-            }
+            /**/
         }
     }
 
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
-        if (e.getName().equals(enemy.getName())) {
+        if (enemy_list.containsKey(e.getName())) {
+            enemy_list.remove(e.getName());
             emotions.updateArousal(200);
             emotions.updateDominance(200);
             emotions.updatePleasure(200);
-            state=2;
-            enemy.reset();
+            state = 2;
         }
     }
 
     void doRadar() {
-        if (enemy.none()) {
+        /*if (enemy.none()) {
             // look around if we have no enemy
             setTurnRadarRight(360);
         } else {
@@ -121,32 +133,28 @@ public class Vip_shoot extends TeamRobot {
             turn += 30 * radarDirection;
             setTurnRadarRight(normalizeBearing(turn));
             radarDirection *= -1;
-        }
+        }*/
+        setTurnRadarRight(360);
     }
-
-    
 
     void doGun() {
 
-        if (enemy.none()) {
-            return;
+        for (AdvancedEnemyBot enemy : enemy_list.values()) {
+            double firePower = Math.min(400 / enemy.getDistance(), 3);
+            double bulletSpeed = 20 - firePower * 3;
+            long time = (long) (enemy.getDistance() / bulletSpeed);
+            double futureX = enemy.getFutureX(time);
+            double futureY = enemy.getFutureY(time);
+            double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
+            setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
+            Point2D.Double spot = new Point2D.Double(futureX, futureY);
+            try {
+                broadcastMessage(spot);
+            } catch (IOException ex) {
+                Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
-        double firePower = Math.min(400 / enemy.getDistance(), 3);
-        double bulletSpeed = 20 - firePower * 3;
-        long time = (long) (enemy.getDistance() / bulletSpeed);
-        double futureX = enemy.getFutureX(time);
-        double futureY = enemy.getFutureY(time);
-        double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
-        setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
-        Point2D.Double spot=new Point2D.Double(futureX,futureY);
-        try {
-            broadcastMessage(spot);
-        } catch (IOException ex) {
-            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        //setFire(1.5);
-        
     }
 
     // computes the absolute bearing between two points
@@ -190,7 +198,7 @@ public class Vip_shoot extends TeamRobot {
         }
         return Integer.parseInt(n);
     }
-    
+
     private void to_place(double x, double y) {
         boolean in_place = false;
         while (!in_place) {
@@ -203,7 +211,7 @@ public class Vip_shoot extends TeamRobot {
             }
         }
     }
-    
+
     private void goTo(double x, double y) {
         /* Transform our coordinates into a vector */
         x -= getX();
@@ -243,17 +251,13 @@ public class Vip_shoot extends TeamRobot {
         back(100);
         adjustHeading(90);
         back(100);
-        int i=ThreadLocalRandom.current().nextInt(0, 200);
-        for(;i>0;i--){
+        int i = ThreadLocalRandom.current().nextInt(0, 200);
+        for (; i > 0; i--) {
             doNothing();
         }
-        
+
     }
-    
-    
-    
-    
-    
+
     private void adjustHeading(int new_heading) {
         boolean my_head = false;
         while (!my_head) {
@@ -270,15 +274,15 @@ public class Vip_shoot extends TeamRobot {
         state = 1;  // mudar para 1 após testes completos
 
     }
-     
+
     private boolean tooCloseToWall() {
-        boolean toclose=false;
-        if(getX() <= wallMargin|| getX() >= getBattleFieldWidth() - wallMargin|| getY() <= wallMargin|| getY() >= getBattleFieldHeight() - wallMargin){
-            toclose=true;
+        boolean toclose = false;
+        if (getX() <= wallMargin || getX() >= getBattleFieldWidth() - wallMargin || getY() <= wallMargin || getY() >= getBattleFieldHeight() - wallMargin) {
+            toclose = true;
             stop();
-            state=3;
-        }else{
-            state=2;
+            state = 3;
+        } else {
+            state = 2;
         }
         return toclose;
     }
@@ -292,26 +296,21 @@ public class Vip_shoot extends TeamRobot {
         }
         turnRight(180);
         ahead(200);
-        
+
     }
-    
+
     public void onMessageReceived(MessageEvent e) {
-                if(e.getMessage() instanceof String){
-                    ready++;
-                }
-	}
-        
-    
+        if (e.getMessage() instanceof String) {
+            ready++;
+        }
+    }
+
     public void onHitByBullet(HitByBulletEvent event) {
         emotions.updateArousal(-10000);
         emotions.updateDominance(-10000);
         emotions.updatePleasure(-10000);
     }
-    
-    
 
-    
-    
     @Override
     public void onRoundEnded(RoundEndedEvent event) {
         System.out.println(emotions.evaluate());
@@ -323,7 +322,5 @@ public class Vip_shoot extends TeamRobot {
         emotions.updateDominance(-100);
         emotions.updatePleasure(-100);
     }
-    
-    
-}
 
+}

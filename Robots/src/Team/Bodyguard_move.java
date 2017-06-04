@@ -1,4 +1,3 @@
-
 package team;
 
 import robocode.*;
@@ -23,8 +22,8 @@ public class Bodyguard_move extends TeamRobot implements Droid {
     private byte moveDirection = 1;
     private int myNumber;
     private int turn = 0;
-    private PAD_Space emotions=new PAD_Space();
-    
+    private PAD_Space emotions = new PAD_Space();
+
     public void run() {
         myNumber = getBotNumber(this.getName());
         System.out.println(getName());
@@ -40,6 +39,7 @@ public class Bodyguard_move extends TeamRobot implements Droid {
             enemy.reset();
         }
     }
+
     @Override
     public void onHitRobot(HitRobotEvent event) {
         emotions.updateArousal(-500);
@@ -48,12 +48,11 @@ public class Bodyguard_move extends TeamRobot implements Droid {
         back(100);
         adjustHeading(90);
         back(100);
-        int i=ThreadLocalRandom.current().nextInt(0, 200);
-        for(;i>0;i--){
+        int i = ThreadLocalRandom.current().nextInt(0, 200);
+        for (; i > 0; i--) {
             doNothing();
         }
-        
-        
+
     }
 
     @Override
@@ -69,8 +68,6 @@ public class Bodyguard_move extends TeamRobot implements Droid {
         emotions.updateDominance(-1000);
         emotions.updatePleasure(-1000);
     }
-    
-    
 
     @Override
     public void onRoundEnded(RoundEndedEvent event) {
@@ -122,7 +119,7 @@ public class Bodyguard_move extends TeamRobot implements Droid {
         }
         if (e.getMessage() instanceof Point3D) {
             Point3D p = (Point3D) e.getMessage();
-            doMove(p.getX(), p.getY(),p.getZ());
+            doMove(p.getX(), p.getY(), p.getZ());
             execute();
         }
         if (e.getMessage() instanceof String) {
@@ -144,9 +141,9 @@ public class Bodyguard_move extends TeamRobot implements Droid {
     }
 
     private void turn_arround(String wall) {
-        
-        switch(wall){
-            case "UP": 
+
+        switch (wall) {
+            case "UP":
                 adjustHeading(180);
                 ahead(200);
                 break;
@@ -163,8 +160,7 @@ public class Bodyguard_move extends TeamRobot implements Droid {
                 ahead(200);
                 break;
         }
-       
-        
+
     }
 
     private void goTo(double x, double y) {
@@ -212,25 +208,25 @@ public class Bodyguard_move extends TeamRobot implements Droid {
 
         switch (myNumber) {
             case 1:
-                to_place(x+((getBattleFieldWidth()-x))/2,y);
+                to_place(x + ((getBattleFieldWidth() - x)) / 2, y);
                 to_place(x + 70, y);
                 break;
             case 2:
-                to_place(x,y+((getBattleFieldHeight()-y)/2));
+                to_place(x, y + ((getBattleFieldHeight() - y) / 2));
                 to_place(x, y + 70);
                 break;
             case 3:
-                to_place(x/2,y);
+                to_place(x / 2, y);
                 to_place(x - 70, y);
                 break;
             case 4:
-                to_place(x,y/2);
+                to_place(x, y / 2);
                 to_place(x, y - 70);
                 break;
         }
     }
 
-    public void doMove(double right, double value_right,double value_move) {
+    public void doMove(double right, double value_right, double value_move) {
         emotions.updateArousal(1);
         emotions.updateDominance(1);
         emotions.updatePleasure(1);
@@ -263,8 +259,5 @@ public class Bodyguard_move extends TeamRobot implements Droid {
             }
         }
     }
-    
-    
 
-    
 }

@@ -20,41 +20,41 @@ public class Vip_move extends TeamRobot {
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
-    private int start_x=500;
-    private int start_y=500;
+    private int start_x = 500;
+    private int start_y = 500;
     private int state;
     private int tooCloseToWall = 0;
     private int wallMargin = 300;
-    private int turn=0;
-    private int ready=0;
-    private PAD_Space emotions= new PAD_Space();
+    private int turn = 0;
+    private int ready = 0;
+    private PAD_Space emotions = new PAD_Space();
 
     public void run() {
-        
+
         myNumber = getBotNumber(this.getName());
         setColors(Color.white, Color.black, Color.magenta);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-        state=0;  //iniciar a um para testes
-        
+        state = 0;  //iniciar a um para testes
+
         to_place(start_x, start_y);
-        
-        Point2D.Float start_spot=new Point2D.Float(start_x,start_y);
+
+        Point2D.Float start_spot = new Point2D.Float(start_x, start_y);
         try {
             broadcastMessage(start_spot);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         while (true) {
-            switch(state){
+            switch (state) {
                 case 0:
                     adjustHeading(90);
                     break;
                 case 1:
                     doNothing();
-                    if(ready==this.getTeammates().length){
-                        state=2;
+                    if (ready == this.getTeammates().length) {
+                        state = 2;
                     }
                     break;
                 case 2:
@@ -68,12 +68,9 @@ public class Vip_move extends TeamRobot {
                     execute();
                     tooCloseToWall();
             }
-           
+
         }
     }
-    
-    
-
 
     public void onScannedRobot(ScannedRobotEvent e) {
         if (!isTeammate(e.getName())) {
@@ -88,7 +85,7 @@ public class Vip_move extends TeamRobot {
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
         if (e.getName().equals(enemy.getName())) {
-            state=2;
+            state = 2;
             enemy.reset();
         }
     }
@@ -112,32 +109,31 @@ public class Vip_move extends TeamRobot {
         emotions.updateDominance(1);
         emotions.updatePleasure(1);
         tooCloseToWall();
-        
-        int right=ThreadLocalRandom.current().nextInt(0, 2);
-        int value_right=ThreadLocalRandom.current().nextInt(1, 91);
-        int value_move=ThreadLocalRandom.current().nextInt(1, 201);
-        Point3D move_ins=new Point3D(right,value_right,value_move);
+
+        int right = ThreadLocalRandom.current().nextInt(0, 2);
+        int value_right = ThreadLocalRandom.current().nextInt(1, 91);
+        int value_move = ThreadLocalRandom.current().nextInt(1, 201);
+        Point3D move_ins = new Point3D(right, value_right, value_move);
         try {
             broadcastMessage(move_ins);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(turn==1){
-            if(right==1){
+        if (turn == 1) {
+            if (right == 1) {
                 turnRight(value_right);
-                turn=0;
-            }else{
+                turn = 0;
+            } else {
                 turnRight(-value_right);
-                turn=0;
+                turn = 0;
             }
-        }else{
-            turn=1;
+        } else {
+            turn = 1;
             ahead(value_move);
         }
-        
-        
+
     }
-    
+
     @Override
     public void onHitByBullet(HitByBulletEvent event) {
         emotions.updateArousal(-1000);
@@ -186,7 +182,7 @@ public class Vip_move extends TeamRobot {
         }
         return Integer.parseInt(n);
     }
-    
+
     private void to_place(double x, double y) {
         boolean in_place = false;
         while (!in_place) {
@@ -199,7 +195,7 @@ public class Vip_move extends TeamRobot {
             }
         }
     }
-    
+
     private void goTo(double x, double y) {
         /* Transform our coordinates into a vector */
         x -= getX();
@@ -239,12 +235,11 @@ public class Vip_move extends TeamRobot {
         back(100);
         adjustHeading(90);
         back(100);
-        int i=ThreadLocalRandom.current().nextInt(0, 200);
-        for(;i>0;i--){
+        int i = ThreadLocalRandom.current().nextInt(0, 200);
+        for (; i > 0; i--) {
             doNothing();
         }
-        
-        
+
     }
 
     @Override
@@ -258,10 +253,7 @@ public class Vip_move extends TeamRobot {
     public void onDeath(DeathEvent event) {
         System.out.println(emotions.evaluate());
     }
-    
-    
-    
-    
+
     private void adjustHeading(int new_heading) {
         boolean my_head = false;
         while (!my_head) {
@@ -278,30 +270,30 @@ public class Vip_move extends TeamRobot {
         state = 1;  // mudar para 1 após testes completos
 
     }
-     
+
     private boolean tooCloseToWall() {
-        boolean toclose=false;
-        if(getX() <= wallMargin|| getX() >= getBattleFieldWidth() - wallMargin|| getY() <= wallMargin|| getY() >= getBattleFieldHeight() - wallMargin){
-            toclose=true;
+        boolean toclose = false;
+        if (getX() <= wallMargin || getX() >= getBattleFieldWidth() - wallMargin || getY() <= wallMargin || getY() >= getBattleFieldHeight() - wallMargin) {
+            toclose = true;
             stop();
-            state=3;
-        }else{
-            state=2;
+            state = 3;
+        } else {
+            state = 2;
         }
         return toclose;
     }
 
     private void turn_arround() {
         //update state
-       
-        String wall=wich_wall();
+
+        String wall = wich_wall();
         try {
             broadcastMessage(wall);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        switch(wall){
-            case "UP": 
+        switch (wall) {
+            case "UP":
                 adjustHeading(180);
                 ahead(200);
                 break;
@@ -318,32 +310,25 @@ public class Vip_move extends TeamRobot {
                 ahead(200);
                 break;
         }
-       
-        
-    }
-    
-    public void onMessageReceived(MessageEvent e) {
-                if(e.getMessage() instanceof String){
-                    ready++;
-                }
-	}
 
-    private String wich_wall() {
-        if(getX()+wallMargin>getBattleFieldWidth()){
-            return "RIGHT";
-        }else{
-            if(getX()-wallMargin<0){
-                return "LEFT";
-            }else{
-                if(getY()+wallMargin>getBattleFieldWidth()){
-                    return "UP";
-                }else{
-                    return "DOWN";
-                }
-            }
+    }
+
+    public void onMessageReceived(MessageEvent e) {
+        if (e.getMessage() instanceof String) {
+            ready++;
         }
     }
-        
-        
-}
 
+    private String wich_wall() {
+        if (getX() + wallMargin > getBattleFieldWidth()) {
+            return "RIGHT";
+        } else if (getX() - wallMargin < 0) {
+            return "LEFT";
+        } else if (getY() + wallMargin > getBattleFieldWidth()) {
+            return "UP";
+        } else {
+            return "DOWN";
+        }
+    }
+
+}

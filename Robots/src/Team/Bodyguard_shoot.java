@@ -27,7 +27,9 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
     private byte moveDirection = 1;
     private int myNumber;
     private int turn = 0;
-    private PAD_Space emotions=new PAD_Space();
+    private double start_x;
+    private double start_y;
+    private PAD_Space emotions = new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
@@ -44,8 +46,6 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
             enemy.reset();
         }
     }
-
-   
 
     // computes the absolute bearing between two points
     double absoluteBearing(double x1, double y1, double x2, double y2) {
@@ -85,12 +85,16 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
             // Calculate x and y to target
             double dx = p.getX() - this.getX();
             double dy = p.getY() - this.getY();
-            System.out.println(line_of_fire(dx, dy));
+            //System.out.println(line_of_fire(dx, dy));
             if (line_of_fire(dx, dy)) {
+                if (move(dx) != 0) {
+                    //System.out.println(move(dx));
+                    ahead(move(dx));
+                }
                 emotions.updateArousal(1);
                 emotions.updateDominance(1);
                 emotions.updatePleasure(1);
-              
+
                 // Calculate angle to target
                 double theta = Math.toDegrees(Math.atan2(dx, dy));
 
@@ -104,6 +108,9 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
         if (e.getMessage() instanceof Point2D.Float) {
             Point2D.Float p = (Point2D.Float) e.getMessage();
             go_to_start_position(p.getX(), p.getY());
+            setMaxVelocity(5);
+            start_x = p.getX();
+            start_y = p.getY();
             adjustHeading(90);
             try {
                 sendMessage("team.Vip_shoot*", "READY");
@@ -125,8 +132,6 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
             }
         }
     }
-
-    
 
     private void goTo(double x, double y) {
         /* Transform our coordinates into a vector */
@@ -173,25 +178,23 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
 
         switch (myNumber) {
             case 1:
-                to_place(x+((getBattleFieldWidth()-x))/2,y);
+                to_place(x + ((getBattleFieldWidth() - x)) / 2, y);
                 to_place(x + 70, y);
                 break;
             case 2:
-                to_place(x,y+((getBattleFieldHeight()-y)/2));
+                to_place(x, y + ((getBattleFieldHeight() - y) / 2));
                 to_place(x, y + 70);
                 break;
             case 3:
-                to_place(x/2,y);
+                to_place(x / 2, y);
                 to_place(x - 70, y);
                 break;
             case 4:
-                to_place(x,y/2);
+                to_place(x, y / 2);
                 to_place(x, y - 70);
                 break;
         }
     }
-
-   
 
     private void adjustHeading(int new_heading) {
         boolean my_head = false;
@@ -211,7 +214,7 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
     private boolean line_of_fire(double x, double y) {
         switch (myNumber) {
             case 1:
-                if (x > 0) {
+                if (x > 50) {
                     return true;
                 }
                 break;
@@ -221,7 +224,7 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
                 }
                 break;
             case 3:
-                if (x < 0) {
+                if (x < -50) {
                     return true;
                 }
                 break;
@@ -235,8 +238,8 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
 
         return false;
     }
-    
-     @Override
+
+    @Override
     public void onHitRobot(HitRobotEvent event) {
         emotions.updateArousal(-500);
         emotions.updateDominance(-500);
@@ -244,12 +247,11 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
         back(100);
         adjustHeading(90);
         back(100);
-        int i=ThreadLocalRandom.current().nextInt(0, 200);
-        for(;i>0;i--){
+        int i = ThreadLocalRandom.current().nextInt(0, 200);
+        for (; i > 0; i--) {
             doNothing();
         }
-        
-        
+
     }
 
     @Override
@@ -265,11 +267,28 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
         emotions.updateDominance(-1000);
         emotions.updatePleasure(-1000);
     }
-    
-    
 
     @Override
     public void onRoundEnded(RoundEndedEvent event) {
         System.out.println(emotions.evaluate());
+    }
+
+    private double move(double dx) {
+        //System.out.println(dx);
+        //System.out.println("dx:" +dx+" onde estou:"+getX()+" LIMITE:"+start_x+70);
+        if (myNumber == 2 || myNumber == 4) {
+            if (dx > 100 || dx < -100) {
+                if (dx < 0) {
+                    //System.out.println("entrei 1");
+                    return (start_x - 70) - getX();
+                } else {
+                    //System.out.println("entrei 2");
+                    return (start_x + 70) - getX();
+                }
+            }
+            //System.out.println("entrei 3");
+            return start_x-getX();
+        }
+        return 0;
     }
 }

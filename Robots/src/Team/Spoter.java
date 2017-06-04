@@ -14,37 +14,37 @@ import static robocode.util.Utils.normalRelativeAngleDegrees;
 public class Spoter extends TeamRobot {
 
     private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
-    private HashMap<String,Mate> team = new HashMap<>();
+    private HashMap<String, Mate> team = new HashMap<>();
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
-    private PAD_Space emotions= new PAD_Space();
+    private PAD_Space emotions = new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
         setColors(Color.white, Color.black, Color.magenta);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-        Mate myself= new Mate(getName(),getX(),getY());
+        Mate myself = new Mate(getName(), getX(), getY());
         try {
             broadcastMessage(myself);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
         while (true) {
-            myself= new Mate(getName(),getX(),getY());
+            myself = new Mate(getName(), getX(), getY());
             try {
-            broadcastMessage(myself);
-        } catch (IOException ex) {
-            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
-        }
+                broadcastMessage(myself);
+            } catch (IOException ex) {
+                Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+            }
             doRadar();
             doMove();
             doGun();
             execute();
         }
     }
-    
+
     public void onDeath(DeathEvent event) {
         try {
             broadcastMessage("DIED");
@@ -55,22 +55,21 @@ public class Spoter extends TeamRobot {
 
     public void onScannedRobot(ScannedRobotEvent e) {
 
-        
         if (!isTeammate(e.getName())) {
             if (enemy.none() || e.getDistance() < enemy.getDistance() - 70
                     || e.getName().equals(enemy.getName())) {
 
-                
                 enemy.update(e, this);
-                
-            }else{
+
+            } else {
                 emotions.updateArousal(10);
-            
+
                 emotions.updateDominance(10);
                 emotions.updatePleasure(10);
+            }
         }
     }
-    }
+
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
         if (e.getName().equals(enemy.getName())) {
@@ -119,19 +118,19 @@ public class Spoter extends TeamRobot {
         double futureY = enemy.getFutureY(time);
         double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
         setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
-        Point3D spot=new Point3D(futureX,futureY,time);
-        
+        Point3D spot = new Point3D(futureX, futureY, time);
+
         try {
             sendMessage("team.Shooter* (" + myNumber + ")", spot);
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         //System.out.println(!in_line_of_fire(futureX,futureY));
-        if(!in_line_of_fire(futureX,futureY,time)){
-        if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
-            setFire(firePower);
-        }
+        if (!in_line_of_fire(futureX, futureY, time)) {
+            if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
+                setFire(firePower);
+            }
         }
     }
 
@@ -176,51 +175,51 @@ public class Spoter extends TeamRobot {
         }
         return Integer.parseInt(n);
     }
-    
+
     public void onMessageReceived(MessageEvent e) {
-                if (e.getMessage() instanceof Mate) {
-                        Mate mate=  (Mate)e.getMessage();
-			team.put(mate.getName(), mate);
-		}
-                if (e.getMessage() instanceof String) {
-                        team.remove(e.getSender());
-		}
-	}
-    
-    public boolean in_line_of_fire(double x, double y,long when){
-        for(Mate m:team.values()){
-            if(Line2D.linesIntersect(m.getX()-40,m.getY()-40,m.getX()+40,m.getY()+40,getFutureX(when),getFutureY(when),x,y)){
+        if (e.getMessage() instanceof Mate) {
+            Mate mate = (Mate) e.getMessage();
+            team.put(mate.getName(), mate);
+        }
+        if (e.getMessage() instanceof String) {
+            team.remove(e.getSender());
+        }
+    }
+
+    public boolean in_line_of_fire(double x, double y, long when) {
+        for (Mate m : team.values()) {
+            if (Line2D.linesIntersect(m.getX() - 40, m.getY() - 40, m.getX() + 40, m.getY() + 40, getFutureX(when), getFutureY(when), x, y)) {
                 return true;
             }
         }
         return false;
     }
-    
+
     public double getFutureX(long when) {
-		/*
+        /*
 		double sin = Math.sin(Math.toRadians(getHeading()));
 		double futureX = x + sin * getVelocity() * when;
 		return futureX;
-		*/
-		return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
-	}
+         */
+        return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
+    }
 
-	public double getFutureY(long when) {
-		/*
+    public double getFutureY(long when) {
+        /*
 		double cos = Math.cos(Math.toRadians(getHeading()));
 		double futureY = y + cos * getVelocity() * when;
 		return futureY;
-		*/
-		return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
-	}
-    
-        public void onHitByBullet(HitByBulletEvent event) {
-        int power= (int) event.getPower()*2;
+         */
+        return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
+    }
+
+    public void onHitByBullet(HitByBulletEvent event) {
+        int power = (int) event.getPower() * 2;
         emotions.updateArousal(-power);
         emotions.updateDominance(-power);
         emotions.updatePleasure(-power);
     }
-    
+
     @Override
     public void onHitRobot(HitRobotEvent event) {
         emotions.updateArousal(-10);
@@ -230,12 +229,12 @@ public class Spoter extends TeamRobot {
 
     @Override
     public void onBulletHit(BulletHitEvent event) {
-        int power= (int) event.getBullet().getPower();
-        if(!isTeammate(event.getName())){
-        emotions.updateArousal(power);
-        emotions.updateDominance(power);
-        emotions.updatePleasure(power);
-        }else{
+        int power = (int) event.getBullet().getPower();
+        if (!isTeammate(event.getName())) {
+            emotions.updateArousal(power);
+            emotions.updateDominance(power);
+            emotions.updatePleasure(power);
+        } else {
             emotions.updateArousal(-power);
             emotions.updateDominance(-power);
             emotions.updatePleasure(-power);
@@ -244,12 +243,12 @@ public class Spoter extends TeamRobot {
 
     @Override
     public void onBulletMissed(BulletMissedEvent event) {
-        int power= (int) event.getBullet().getPower()/2;
+        int power = (int) event.getBullet().getPower() / 2;
         emotions.updateArousal(power);
         emotions.updateDominance(power);
         emotions.updatePleasure(power);
     }
-    
+
     @Override
     public void onRoundEnded(RoundEndedEvent event) {
         System.out.println(emotions.evaluate());
@@ -261,5 +260,5 @@ public class Spoter extends TeamRobot {
         emotions.updateDominance(-1);
         emotions.updatePleasure(-1);
     }
-        
+
 }

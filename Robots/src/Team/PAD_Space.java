@@ -62,7 +62,7 @@ public class PAD_Space {
         } else if (dominance > 0) {
             rate++;
         }
-        switch(rate){
+        switch (rate) {
             case -3:
                 return "This robot had and awful experience.";
             case -2:
@@ -73,7 +73,7 @@ public class PAD_Space {
                 return "This robot had a neutral experience.";
             case 1:
                 return "This robot had a good experience.";
-            case 2: 
+            case 2:
                 return "This robot had a great experience.";
             case 3:
                 return "This robot had a awesome experience";

@@ -11,23 +11,22 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 public class ThatsMine extends TeamRobot {
 
     private AdvancedEnemyBot enemy = new AdvancedEnemyBot();
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
-    private ArrayList<String> chores=new ArrayList<>();
-    private HashMap<String,Mate> team = new HashMap<>();
-    private PAD_Space emotions= new PAD_Space();
+    private ArrayList<String> chores = new ArrayList<>();
+    private HashMap<String, Mate> team = new HashMap<>();
+    private PAD_Space emotions = new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
         setColors(Color.white, Color.black, Color.magenta);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
-        Mate myself= new Mate(getName(),getX(),getY());
+        Mate myself = new Mate(getName(), getX(), getY());
         try {
             broadcastMessage(myself);
         } catch (IOException ex) {
@@ -35,12 +34,12 @@ public class ThatsMine extends TeamRobot {
         }
 
         while (true) {
-            myself= new Mate(getName(),getX(),getY());
+            myself = new Mate(getName(), getX(), getY());
             try {
-            broadcastMessage(myself);
-        } catch (IOException ex) {
-            Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
-        }
+                broadcastMessage(myself);
+            } catch (IOException ex) {
+                Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
+            }
             doRadar();
             doMove();
             doGun();
@@ -55,22 +54,22 @@ public class ThatsMine extends TeamRobot {
         //System.out.println(enemy.getName());
         if (!isTeammate(e.getName())) {
             if (enemy.none() || e.getDistance() < enemy.getDistance() - 70
-                    || e.getName().equals(enemy.getName())){
+                    || e.getName().equals(enemy.getName())) {
 
-                if(chores.contains(e.getName()) && e.getName().equals(enemy.getName())){
+                if (chores.contains(e.getName()) && e.getName().equals(enemy.getName())) {
                     emotions.updateArousal(1);
                     emotions.updateDominance(1);
                     emotions.updatePleasure(1);
                     enemy.update(e, this);
-                }else{
+                } else {
                     emotions.updateArousal(-1);
                     emotions.updateDominance(-1);
                     emotions.updatePleasure(-1);
                 }
                 // track him using the NEW update method
-                
-                if(!chores.contains(e.getName())){
-                    enemy.update(e,this);
+
+                if (!chores.contains(e.getName())) {
+                    enemy.update(e, this);
                     chores.add(e.getName());
                     try {
                         broadcastMessage(e.getName());
@@ -78,13 +77,12 @@ public class ThatsMine extends TeamRobot {
                         Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-                
-                
+
             }
         }
     }
-    
-    private boolean isMyEnemy(ScannedRobotEvent e){
+
+    private boolean isMyEnemy(ScannedRobotEvent e) {
         return e.getName().equals(enemy.getName());
     }
 
@@ -136,9 +134,10 @@ public class ThatsMine extends TeamRobot {
         double futureY = enemy.getFutureY(time);
         double absDeg = absoluteBearing(getX(), getY(), futureX, futureY);
         setTurnGunRight(normalizeBearing(absDeg - getGunHeading()));
-        if(!in_line_of_fire(futureX, futureY, time))
-        if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
-            setFire(firePower);
+        if (!in_line_of_fire(futureX, futureY, time)) {
+            if (getGunHeat() == 0 && Math.abs(getGunTurnRemaining()) < 10) {
+                setFire(firePower);
+            }
         }
     }
 
@@ -183,7 +182,7 @@ public class ThatsMine extends TeamRobot {
         }
         return Integer.parseInt(n);
     }
-    
+
     public void onDeath(DeathEvent event) {
         System.out.println(emotions.evaluate());
         try {
@@ -197,58 +196,56 @@ public class ThatsMine extends TeamRobot {
     public void onRoundEnded(RoundEndedEvent event) {
         System.out.println(emotions.evaluate());
     }
-    
-    
-    
+
     public void onMessageReceived(MessageEvent e) {
-		if (e.getMessage() instanceof String) {
-                    if(e.getMessage().toString().equals("DIED")){
-                        team.remove(e.getSender());
-                    }else{
-                    //System.out.println(e.getMessage().toString());
-                        chores.add(e.getMessage().toString());
-                    }
-		}
-                if (e.getMessage() instanceof Mate) {
-                        Mate mate=  (Mate)e.getMessage();
-			team.put(mate.getName(), mate);
-		}
-	}
-    
-    public boolean in_line_of_fire(double x, double y,double when){
-        for(Mate m:team.values()){
-            if(Line2D.linesIntersect(m.getX()-40,m.getY()-40,m.getX()+40,m.getY()+40,getFutureX(when),getFutureY(when),x,y)){
+        if (e.getMessage() instanceof String) {
+            if (e.getMessage().toString().equals("DIED")) {
+                team.remove(e.getSender());
+            } else {
+                //System.out.println(e.getMessage().toString());
+                chores.add(e.getMessage().toString());
+            }
+        }
+        if (e.getMessage() instanceof Mate) {
+            Mate mate = (Mate) e.getMessage();
+            team.put(mate.getName(), mate);
+        }
+    }
+
+    public boolean in_line_of_fire(double x, double y, double when) {
+        for (Mate m : team.values()) {
+            if (Line2D.linesIntersect(m.getX() - 40, m.getY() - 40, m.getX() + 40, m.getY() + 40, getFutureX(when), getFutureY(when), x, y)) {
                 return true;
             }
         }
         return false;
     }
-    
+
     public double getFutureX(double when) {
-		/*
+        /*
 		double sin = Math.sin(Math.toRadians(getHeading()));
 		double futureX = x + sin * getVelocity() * when;
 		return futureX;
-		*/
-		return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
-	}
-    
+         */
+        return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
+    }
+
     public double getFutureY(double when) {
-		/*
+        /*
 		double cos = Math.cos(Math.toRadians(getHeading()));
 		double futureY = y + cos * getVelocity() * when;
 		return futureY;
-		*/
-		return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
-	}
-    
+         */
+        return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
+    }
+
     public void onHitByBullet(HitByBulletEvent event) {
-        int power= (int) event.getPower()*2;
+        int power = (int) event.getPower() * 2;
         emotions.updateArousal(-power);
         emotions.updateDominance(-power);
         emotions.updatePleasure(-power);
     }
-    
+
     @Override
     public void onHitRobot(HitRobotEvent event) {
         emotions.updateArousal(-10);
@@ -258,12 +255,12 @@ public class ThatsMine extends TeamRobot {
 
     @Override
     public void onBulletHit(BulletHitEvent event) {
-        int power= (int) event.getBullet().getPower();
-        if(!isTeammate(event.getName())){
-        emotions.updateArousal(power);
-        emotions.updateDominance(power);
-        emotions.updatePleasure(power);
-        }else{
+        int power = (int) event.getBullet().getPower();
+        if (!isTeammate(event.getName())) {
+            emotions.updateArousal(power);
+            emotions.updateDominance(power);
+            emotions.updatePleasure(power);
+        } else {
             emotions.updateArousal(-power);
             emotions.updateDominance(-power);
             emotions.updatePleasure(-power);
@@ -272,15 +269,11 @@ public class ThatsMine extends TeamRobot {
 
     @Override
     public void onBulletMissed(BulletMissedEvent event) {
-        int power= (int) event.getBullet().getPower()/2;
+        int power = (int) event.getBullet().getPower() / 2;
         emotions.updateArousal(power);
         emotions.updateDominance(power);
         emotions.updatePleasure(power);
     }
-    
-    
-    
-    
 
     @Override
     public void onHitWall(HitWallEvent event) {

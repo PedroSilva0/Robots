@@ -12,7 +12,7 @@ import java.io.Serializable;
  * @author Utilizador
  */
 public class Point3D implements Serializable {
-    
+
     private double x;
     private double y;
     private double z;
@@ -46,7 +46,5 @@ public class Point3D implements Serializable {
     public void setZ(double z) {
         this.z = z;
     }
-    
-    
-    
+
 }

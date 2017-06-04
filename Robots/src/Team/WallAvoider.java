@@ -15,7 +15,7 @@ public class WallAvoider extends TeamRobot {
     private Vector teammembers;
 
     public void run() {
-        teammembers=new Vector();
+        teammembers = new Vector();
         setColors(Color.cyan, Color.magenta, Color.cyan);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
@@ -60,12 +60,13 @@ public class WallAvoider extends TeamRobot {
 
         // track if we have no enemy, the one we found is significantly
         // closer, or we scanned the one we've been tracking.
-        if(!isTeammate(e.getName()))
-        if (enemy.none() || e.getDistance() < enemy.getDistance() - 120
-                || e.getName().equals(enemy.getName())) {
+        if (!isTeammate(e.getName())) {
+            if (enemy.none() || e.getDistance() < enemy.getDistance() - 120
+                    || e.getName().equals(enemy.getName())) {
 
-            // track him using the NEW update method
-            enemy.update(e, this);
+                // track him using the NEW update method
+                enemy.update(e, this);
+            }
         }
     }
 

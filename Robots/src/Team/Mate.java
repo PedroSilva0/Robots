@@ -12,15 +12,15 @@ import java.io.Serializable;
  * @author Utilizador
  */
 public class Mate implements Serializable {
-    
+
     private String name;
     private double x;
     private double y;
 
     public Mate() {
-    name="";
-    x=0;
-            y=0;
+        name = "";
+        x = 0;
+        y = 0;
     }
 
     public Mate(String name, double x, double y) {
@@ -28,13 +28,10 @@ public class Mate implements Serializable {
         this.x = x;
         this.y = y;
     }
-    
 
     public String getName() {
         return name;
     }
-
-    
 
     public void setName(String name) {
         this.name = name;
@@ -56,10 +53,4 @@ public class Mate implements Serializable {
         this.x = x;
     }
 
-    
-    
-    
-    
-    
-    
 }

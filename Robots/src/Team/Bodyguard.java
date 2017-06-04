@@ -203,19 +203,19 @@ public class Bodyguard extends TeamRobot implements Droid {
 
         switch (myNumber) {
             case 1:
-                to_place(getBattleFieldWidth()-50,y);
+                to_place(getBattleFieldWidth() - 50, y);
                 to_place(x + 70, y);
                 break;
             case 2:
-                to_place(x,getBattleFieldHeight()-50);
+                to_place(x, getBattleFieldHeight() - 50);
                 to_place(x, y + 70);
                 break;
             case 3:
-                to_place(50,y);
+                to_place(50, y);
                 to_place(x - 70, y);
                 break;
             case 4:
-                to_place(x,50);
+                to_place(x, 50);
                 to_place(x, y - 70);
                 break;
         }
@@ -280,8 +280,8 @@ public class Bodyguard extends TeamRobot implements Droid {
 
         return false;
     }
-    
-     @Override
+
+    @Override
     public void onHitRobot(HitRobotEvent event) {
         emotions.updateArousal(-500);
         emotions.updateDominance(-500);
@@ -289,12 +289,11 @@ public class Bodyguard extends TeamRobot implements Droid {
         back(100);
         adjustHeading(90);
         back(100);
-        int i=ThreadLocalRandom.current().nextInt(0, 200);
-        for(;i>0;i--){
+        int i = ThreadLocalRandom.current().nextInt(0, 200);
+        for (; i > 0; i--) {
             doNothing();
         }
-        
-        
+
     }
 
     @Override
@@ -310,8 +309,6 @@ public class Bodyguard extends TeamRobot implements Droid {
         emotions.updateDominance(-1000);
         emotions.updatePleasure(-1000);
     }
-    
-    
 
     @Override
     public void onRoundEnded(RoundEndedEvent event) {
