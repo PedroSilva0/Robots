@@ -27,6 +27,7 @@ public class Shooter extends TeamRobot implements Droid{
         private HashMap<String,Mate> team = new HashMap<>();
 	private byte radarDirection = 1;
 	private byte moveDirection = 1;
+        private PAD_Space emotions= new PAD_Space();
 
 	public void run() {
             Mate myself= new Mate(getName(),getX(),getY());

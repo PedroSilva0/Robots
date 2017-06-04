@@ -10,6 +10,7 @@ import java.awt.geom.Point2D;
 import java.awt.Color;
 import java.awt.Point;
 import java.io.IOException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import robocode.util.Utils;
@@ -26,6 +27,7 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
     private byte moveDirection = 1;
     private int myNumber;
     private int turn = 0;
+    private PAD_Space emotions=new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
@@ -85,7 +87,10 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
             double dy = p.getY() - this.getY();
             System.out.println(line_of_fire(dx, dy));
             if (line_of_fire(dx, dy)) {
-
+                emotions.updateArousal(1);
+                emotions.updateDominance(1);
+                emotions.updatePleasure(1);
+              
                 // Calculate angle to target
                 double theta = Math.toDegrees(Math.atan2(dx, dy));
 
@@ -229,5 +234,42 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
         }
 
         return false;
+    }
+    
+     @Override
+    public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-500);
+        emotions.updateDominance(-500);
+        emotions.updatePleasure(-500);
+        back(100);
+        adjustHeading(90);
+        back(100);
+        int i=ThreadLocalRandom.current().nextInt(0, 200);
+        for(;i>0;i--){
+            doNothing();
+        }
+        
+        
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+
+    @Override
+    public void onHitByBullet(HitByBulletEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+    
+    
+
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
     }
 }

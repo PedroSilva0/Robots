@@ -27,6 +27,7 @@ public class Bodyguard extends TeamRobot implements Droid {
     private byte moveDirection = 1;
     private int myNumber;
     private int turn = 0;
+    private PAD_Space emotions = new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
@@ -278,5 +279,42 @@ public class Bodyguard extends TeamRobot implements Droid {
         }
 
         return false;
+    }
+    
+     @Override
+    public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-500);
+        emotions.updateDominance(-500);
+        emotions.updatePleasure(-500);
+        back(100);
+        adjustHeading(90);
+        back(100);
+        int i=ThreadLocalRandom.current().nextInt(0, 200);
+        for(;i>0;i--){
+            doNothing();
+        }
+        
+        
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+
+    @Override
+    public void onHitByBullet(HitByBulletEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+    
+    
+
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
     }
 }

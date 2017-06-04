@@ -8,14 +8,11 @@ package team;
 import robocode.*;
 import java.awt.geom.Point2D;
 import java.awt.Color;
-import java.awt.Point;
 import java.io.IOException;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import robocode.util.Utils;
 import java.util.concurrent.ThreadLocalRandom;
-import static robocode.util.Utils.normalRelativeAngleDegrees;
 
 public class Vip_move extends TeamRobot {
 
@@ -30,6 +27,7 @@ public class Vip_move extends TeamRobot {
     private int wallMargin = 300;
     private int turn=0;
     private int ready=0;
+    private PAD_Space emotions= new PAD_Space();
 
     public void run() {
         
@@ -68,7 +66,6 @@ public class Vip_move extends TeamRobot {
                     doRadar();
                     turn_arround();
                     execute();
-                    //state=2;
                     tooCloseToWall();
             }
            
@@ -111,6 +108,9 @@ public class Vip_move extends TeamRobot {
 
     public void doMove() {
         //update state
+        emotions.updateArousal(1);
+        emotions.updateDominance(1);
+        emotions.updatePleasure(1);
         tooCloseToWall();
         
         int right=ThreadLocalRandom.current().nextInt(0, 2);
@@ -136,6 +136,13 @@ public class Vip_move extends TeamRobot {
         }
         
         
+    }
+    
+    @Override
+    public void onHitByBullet(HitByBulletEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
     }
 
     // computes the absolute bearing between two points
@@ -226,6 +233,9 @@ public class Vip_move extends TeamRobot {
 
     @Override
     public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-500);
+        emotions.updateDominance(-500);
+        emotions.updatePleasure(-500);
         back(100);
         adjustHeading(90);
         back(100);
@@ -234,7 +244,22 @@ public class Vip_move extends TeamRobot {
             doNothing();
         }
         
+        
     }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+
+    @Override
+    public void onDeath(DeathEvent event) {
+        System.out.println(emotions.evaluate());
+    }
+    
+    
     
     
     private void adjustHeading(int new_heading) {

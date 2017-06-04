@@ -3,14 +3,14 @@ package team;
 import robocode.*;
 import java.awt.geom.Point2D;
 import java.awt.Color;
-import java.awt.Point;
 import java.awt.geom.Line2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static robocode.util.Utils.normalRelativeAngleDegrees;
+
 
 public class ThatsMine extends TeamRobot {
 
@@ -20,6 +20,7 @@ public class ThatsMine extends TeamRobot {
     private int myNumber;
     private ArrayList<String> chores=new ArrayList<>();
     private HashMap<String,Mate> team = new HashMap<>();
+    private PAD_Space emotions= new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
@@ -57,7 +58,14 @@ public class ThatsMine extends TeamRobot {
                     || e.getName().equals(enemy.getName())){
 
                 if(chores.contains(e.getName()) && e.getName().equals(enemy.getName())){
+                    emotions.updateArousal(1);
+                    emotions.updateDominance(1);
+                    emotions.updatePleasure(1);
                     enemy.update(e, this);
+                }else{
+                    emotions.updateArousal(-1);
+                    emotions.updateDominance(-1);
+                    emotions.updatePleasure(-1);
                 }
                 // track him using the NEW update method
                 
@@ -82,6 +90,9 @@ public class ThatsMine extends TeamRobot {
 
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
+        emotions.updateArousal(50);
+        emotions.updateDominance(50);
+        emotions.updatePleasure(50);
         if (e.getName().equals(enemy.getName())) {
             enemy.reset();
         }
@@ -174,12 +185,20 @@ public class ThatsMine extends TeamRobot {
     }
     
     public void onDeath(DeathEvent event) {
+        System.out.println(emotions.evaluate());
         try {
             broadcastMessage("DIED");
         } catch (IOException ex) {
             Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
+    }
+    
+    
     
     public void onMessageReceived(MessageEvent e) {
 		if (e.getMessage() instanceof String) {
@@ -213,8 +232,8 @@ public class ThatsMine extends TeamRobot {
 		*/
 		return getY() + Math.sin(Math.toRadians(getHeading())) * getVelocity() * when;
 	}
-
-	public double getFutureY(double when) {
+    
+    public double getFutureY(double when) {
 		/*
 		double cos = Math.cos(Math.toRadians(getHeading()));
 		double futureY = y + cos * getVelocity() * when;
@@ -222,4 +241,52 @@ public class ThatsMine extends TeamRobot {
 		*/
 		return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
 	}
+    
+    public void onHitByBullet(HitByBulletEvent event) {
+        int power= (int) event.getPower()*2;
+        emotions.updateArousal(-power);
+        emotions.updateDominance(-power);
+        emotions.updatePleasure(-power);
+    }
+    
+    @Override
+    public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-10);
+        emotions.updateDominance(-10);
+        emotions.updatePleasure(-10);
+    }
+
+    @Override
+    public void onBulletHit(BulletHitEvent event) {
+        int power= (int) event.getBullet().getPower();
+        if(!isTeammate(event.getName())){
+        emotions.updateArousal(power);
+        emotions.updateDominance(power);
+        emotions.updatePleasure(power);
+        }else{
+            emotions.updateArousal(-power);
+            emotions.updateDominance(-power);
+            emotions.updatePleasure(-power);
+        }
+    }
+
+    @Override
+    public void onBulletMissed(BulletMissedEvent event) {
+        int power= (int) event.getBullet().getPower()/2;
+        emotions.updateArousal(power);
+        emotions.updateDominance(power);
+        emotions.updatePleasure(power);
+    }
+    
+    
+    
+    
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-1);
+        emotions.updateDominance(-1);
+        emotions.updatePleasure(-1);
+    }
+
 }

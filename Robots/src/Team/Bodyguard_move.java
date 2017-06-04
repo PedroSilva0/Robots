@@ -6,6 +6,7 @@ import java.awt.geom.Point2D;
 import java.awt.Color;
 import java.awt.Point;
 import java.io.IOException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import robocode.util.Utils;
@@ -22,6 +23,8 @@ public class Bodyguard_move extends TeamRobot implements Droid {
     private byte moveDirection = 1;
     private int myNumber;
     private int turn = 0;
+    private PAD_Space emotions=new PAD_Space();
+    
     public void run() {
         myNumber = getBotNumber(this.getName());
         System.out.println(getName());
@@ -36,6 +39,42 @@ public class Bodyguard_move extends TeamRobot implements Droid {
         if (e.getName().equals(enemy.getName())) {
             enemy.reset();
         }
+    }
+    @Override
+    public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-500);
+        emotions.updateDominance(-500);
+        emotions.updatePleasure(-500);
+        back(100);
+        adjustHeading(90);
+        back(100);
+        int i=ThreadLocalRandom.current().nextInt(0, 200);
+        for(;i>0;i--){
+            doNothing();
+        }
+        
+        
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+
+    @Override
+    public void onHitByBullet(HitByBulletEvent event) {
+        emotions.updateArousal(-1000);
+        emotions.updateDominance(-1000);
+        emotions.updatePleasure(-1000);
+    }
+    
+    
+
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
     }
 
     // computes the absolute bearing between two points
@@ -192,7 +231,9 @@ public class Bodyguard_move extends TeamRobot implements Droid {
     }
 
     public void doMove(double right, double value_right,double value_move) {
-
+        emotions.updateArousal(1);
+        emotions.updateDominance(1);
+        emotions.updatePleasure(1);
         if (turn == 1) {
             if (right == 1) {
                 turnRight(value_right);

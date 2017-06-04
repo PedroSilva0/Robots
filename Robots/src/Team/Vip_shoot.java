@@ -28,6 +28,7 @@ public class Vip_shoot extends TeamRobot {
     private int wallMargin = 300;
     private int turn=0;
     private int ready=0;
+    private PAD_Space emotions= new PAD_Space();
 
     public void run() {
         start_x=(float) getBattleFieldWidth()/2;
@@ -91,6 +92,10 @@ public class Vip_shoot extends TeamRobot {
                 // track him using the NEW update method
                 state=4;
                 enemy.update(e, this);
+            }else{
+                emotions.updateArousal(100);
+                emotions.updateDominance(100);
+                emotions.updatePleasure(100);
             }
         }
     }
@@ -98,6 +103,9 @@ public class Vip_shoot extends TeamRobot {
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
         if (e.getName().equals(enemy.getName())) {
+            emotions.updateArousal(200);
+            emotions.updateDominance(200);
+            emotions.updatePleasure(200);
             state=2;
             enemy.reset();
         }
@@ -229,6 +237,9 @@ public class Vip_shoot extends TeamRobot {
 
     @Override
     public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-50);
+        emotions.updateDominance(-50);
+        emotions.updatePleasure(-50);
         back(100);
         adjustHeading(90);
         back(100);
@@ -290,6 +301,29 @@ public class Vip_shoot extends TeamRobot {
                 }
 	}
         
-        
+    
+    public void onHitByBullet(HitByBulletEvent event) {
+        emotions.updateArousal(-10000);
+        emotions.updateDominance(-10000);
+        emotions.updatePleasure(-10000);
+    }
+    
+    
+
+    
+    
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-100);
+        emotions.updateDominance(-100);
+        emotions.updatePleasure(-100);
+    }
+    
+    
 }
 

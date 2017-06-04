@@ -18,6 +18,7 @@ public class Spoter extends TeamRobot {
     private byte radarDirection = 1;
     private byte moveDirection = 1;
     private int myNumber;
+    private PAD_Space emotions= new PAD_Space();
 
     public void run() {
         myNumber = getBotNumber(this.getName());
@@ -62,13 +63,20 @@ public class Spoter extends TeamRobot {
                 
                 enemy.update(e, this);
                 
-            }
+            }else{
+                emotions.updateArousal(10);
+            
+                emotions.updateDominance(10);
+                emotions.updatePleasure(10);
         }
     }
-
+    }
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
         if (e.getName().equals(enemy.getName())) {
+            emotions.updateArousal(200);
+            emotions.updateDominance(200);
+            emotions.updatePleasure(200);
             enemy.reset();
         }
     }
@@ -206,4 +214,52 @@ public class Spoter extends TeamRobot {
 		return getX() + Math.cos(Math.toRadians(getHeading())) * getVelocity() * when;
 	}
     
+        public void onHitByBullet(HitByBulletEvent event) {
+        int power= (int) event.getPower()*2;
+        emotions.updateArousal(-power);
+        emotions.updateDominance(-power);
+        emotions.updatePleasure(-power);
+    }
+    
+    @Override
+    public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-10);
+        emotions.updateDominance(-10);
+        emotions.updatePleasure(-10);
+    }
+
+    @Override
+    public void onBulletHit(BulletHitEvent event) {
+        int power= (int) event.getBullet().getPower();
+        if(!isTeammate(event.getName())){
+        emotions.updateArousal(power);
+        emotions.updateDominance(power);
+        emotions.updatePleasure(power);
+        }else{
+            emotions.updateArousal(-power);
+            emotions.updateDominance(-power);
+            emotions.updatePleasure(-power);
+        }
+    }
+
+    @Override
+    public void onBulletMissed(BulletMissedEvent event) {
+        int power= (int) event.getBullet().getPower()/2;
+        emotions.updateArousal(power);
+        emotions.updateDominance(power);
+        emotions.updatePleasure(power);
+    }
+    
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-1);
+        emotions.updateDominance(-1);
+        emotions.updatePleasure(-1);
+    }
+        
 }

@@ -30,6 +30,7 @@ public class Vip extends TeamRobot {
     private int wallMargin = 300;
     private int turn=0;
     private int ready=0;
+    private PAD_Space emotions= new PAD_Space();
 
     public void run() {
         
@@ -93,6 +94,10 @@ public class Vip extends TeamRobot {
                 stop();
                 state=4;
                 enemy.update(e, this);
+            }else{
+                emotions.updateArousal(10);
+                emotions.updateDominance(10);
+                emotions.updatePleasure(10);
             }
         }
     }
@@ -100,6 +105,9 @@ public class Vip extends TeamRobot {
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
         if (e.getName().equals(enemy.getName())) {
+            emotions.updateArousal(200);
+            emotions.updateDominance(200);
+            emotions.updatePleasure(200);
             state=2;
             enemy.reset();
         }
@@ -121,6 +129,9 @@ public class Vip extends TeamRobot {
     public void doMove() {
         //update state
         tooCloseToWall();
+        emotions.updateArousal(1);
+        emotions.updateDominance(1);
+        emotions.updatePleasure(1);
         
         int right=ThreadLocalRandom.current().nextInt(0, 2);
         int value_turn=ThreadLocalRandom.current().nextInt(1, 91);
@@ -259,6 +270,9 @@ public class Vip extends TeamRobot {
 
     @Override
     public void onHitRobot(HitRobotEvent event) {
+        emotions.updateArousal(-50);
+        emotions.updateDominance(-50);
+        emotions.updatePleasure(-50);
         back(100);
         adjustHeading(90);
         back(100);
@@ -319,6 +333,24 @@ public class Vip extends TeamRobot {
                     ready++;
                 }
 	}
+    
+    public void onHitByBullet(HitByBulletEvent event) {
+        emotions.updateArousal(-100);
+        emotions.updateDominance(-100);
+        emotions.updatePleasure(-100);
+    }
+    
+    @Override
+    public void onRoundEnded(RoundEndedEvent event) {
+        System.out.println(emotions.evaluate());
+    }
+
+    @Override
+    public void onHitWall(HitWallEvent event) {
+        emotions.updateArousal(-100);
+        emotions.updateDominance(-100);
+        emotions.updatePleasure(-100);
+    }
         
         
 }
