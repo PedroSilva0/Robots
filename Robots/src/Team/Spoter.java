@@ -186,9 +186,10 @@ public class Spoter extends TeamRobot {
         }
     }
 
-    public boolean in_line_of_fire(double x, double y, long when) {
+   public boolean in_line_of_fire(double x, double y, long when) {
         for (Mate m : team.values()) {
-            if (Line2D.linesIntersect(m.getX() - 40, m.getY() - 40, m.getX() + 40, m.getY() + 40, getFutureX(when), getFutureY(when), x, y)) {
+            if (Line2D.linesIntersect(m.getX() - 50, m.getY() - 50, m.getX() + 50, m.getY() + 50, getFutureX(when), getFutureY(when), x, y)
+                    || Line2D.linesIntersect(m.getX() + 50, m.getY() + 50, m.getX() - 50, m.getY() - 50, getFutureX(when), getFutureY(when), x, y)) {
                 return true;
             }
         }

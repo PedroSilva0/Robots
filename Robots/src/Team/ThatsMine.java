@@ -34,14 +34,14 @@ public class ThatsMine extends TeamRobot {
         }
 
         while (true) {
-            myself = new Mate(getName(), getX(), getY());
+            /*myself = new Mate(getName(), getX(), getY());
             try {
                 broadcastMessage(myself);
             } catch (IOException ex) {
                 Logger.getLogger(Spoter.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            }*/
             doRadar();
-            doMove();
+            //doMove();
             doGun();
             execute();
         }
@@ -88,11 +88,16 @@ public class ThatsMine extends TeamRobot {
 
     public void onRobotDeath(RobotDeathEvent e) {
         // see if the robot we were tracking died
-        emotions.updateArousal(50);
-        emotions.updateDominance(50);
-        emotions.updatePleasure(50);
-        if (e.getName().equals(enemy.getName())) {
-            enemy.reset();
+        if (isTeammate(e.getName())) {
+            chores=new ArrayList<>();
+            team.remove(e.getName());
+        } else {
+            emotions.updateArousal(50);
+            emotions.updateDominance(50);
+            emotions.updatePleasure(50);
+            if (e.getName().equals(enemy.getName())) {
+                enemy.reset();
+            }
         }
     }
 
@@ -198,10 +203,19 @@ public class ThatsMine extends TeamRobot {
     }
 
     public void onMessageReceived(MessageEvent e) {
+
         if (e.getMessage() instanceof String) {
+            System.out.println(e.getMessage().toString());
+            System.out.println(chores.size());
             if (e.getMessage().toString().equals("DIED")) {
+                //chores= new ArrayList<>();
+                //System.out.println(chores.size());
                 team.remove(e.getSender());
             } else {
+                if (e.getMessage().toString().equals(enemy.getName())) {
+                    chores.remove(e.getMessage().toString());
+
+                }
                 //System.out.println(e.getMessage().toString());
                 chores.add(e.getMessage().toString());
             }
@@ -214,7 +228,8 @@ public class ThatsMine extends TeamRobot {
 
     public boolean in_line_of_fire(double x, double y, double when) {
         for (Mate m : team.values()) {
-            if (Line2D.linesIntersect(m.getX() - 40, m.getY() - 40, m.getX() + 40, m.getY() + 40, getFutureX(when), getFutureY(when), x, y)) {
+            if (Line2D.linesIntersect(m.getX() - 50, m.getY() - 50, m.getX() + 50, m.getY() + 50, getFutureX(when), getFutureY(when), x, y)
+                    || Line2D.linesIntersect(m.getX() + 50, m.getY() + 50, m.getX() - 50, m.getY() - 50, getFutureX(when), getFutureY(when), x, y)) {
                 return true;
             }
         }

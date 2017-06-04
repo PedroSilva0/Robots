@@ -108,7 +108,7 @@ public class Bodyguard_shoot extends TeamRobot implements Droid {
         if (e.getMessage() instanceof Point2D.Float) {
             Point2D.Float p = (Point2D.Float) e.getMessage();
             go_to_start_position(p.getX(), p.getY());
-            setMaxVelocity(5);
+            //setMaxVelocity(5);
             start_x = p.getX();
             start_y = p.getY();
             adjustHeading(90);
